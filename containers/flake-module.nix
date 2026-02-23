@@ -119,17 +119,7 @@ in
         rustContainer =
           if config.templates.rust.enable && hasNix2Container then
             let
-              rustToolchain =
-                if config.templates.rust.version != null then
-                  pkgs.rust-bin.${config.templates.rust.channel}.${config.templates.rust.version}.default.override {
-                    extensions = config.templates.rust.components;
-                    targets = config.templates.rust.targets;
-                  }
-                else
-                  pkgs.rust-bin.${config.templates.rust.channel}.latest.default.override {
-                    extensions = config.templates.rust.components;
-                    targets = config.templates.rust.targets;
-                  };
+              rustToolchain = pkgs.rust-bin.fromRustupToolchainFile config.templates.rust.toolchainFile;
             in
             buildContainer {
               name = "rust";

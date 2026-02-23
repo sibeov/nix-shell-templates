@@ -1,14 +1,13 @@
 # Rust Module
 
-Provides a modern Rust development environment using [rust-overlay](https://github.com/oxalica/rust-overlay).
+Provides a Rust development environment using [rust-overlay](https://github.com/oxalica/rust-overlay).
 
 ## Features
 
-- **Flexible toolchain**: stable, beta, or nightly channels
-- **Version pinning**: Lock to specific Rust versions
-- **Components**: rust-analyzer, clippy, rustfmt included by default
-- **Cross-compilation**: Add targets for WASM, ARM, etc.
+- **Toolchain from file**: Reads `rust-toolchain.toml` for rustup compatibility
+- **Cross-environment**: Same toolchain for Nix and non-Nix users
 - **Cargo tools**: Common utilities pre-installed
+- **Complete scaffold**: Template includes `Cargo.toml` ready to build
 
 ## Quick Start
 
@@ -17,7 +16,53 @@ nix flake init -t github:sibeov/nix-shell-templates#rust
 nix develop
 ```
 
-## Options
+The template creates:
+- `flake.nix` - Nix development environment
+- `rust-toolchain.toml` - Toolchain specification (works with rustup too)
+- `Cargo.toml` - Project manifest
+
+## rust-toolchain.toml
+
+The toolchain is defined in `rust-toolchain.toml`, which is read by both Nix (via `rust-bin.fromRustupToolchainFile`) and rustup:
+
+```toml
+[toolchain]
+channel = "stable"
+profile = "default"
+components = [
+    "rust-src",
+    "clippy",
+    "rustfmt",
+    "rust-analyzer",
+]
+```
+
+### Customizing the Toolchain
+
+Edit `rust-toolchain.toml` to change:
+
+**Use nightly:**
+```toml
+[toolchain]
+channel = "nightly"
+```
+
+**Pin to specific version:**
+```toml
+[toolchain]
+channel = "1.85.0"
+```
+
+**Add cross-compilation targets:**
+```toml
+[toolchain]
+channel = "stable"
+targets = ["wasm32-unknown-unknown", "aarch64-unknown-linux-gnu"]
+```
+
+## Module Options
+
+When using the module (for advanced use cases):
 
 ### `templates.rust.enable`
 
@@ -28,24 +73,21 @@ nix develop
 
 Enable the Rust development environment.
 
-### `templates.rust.channel`
+### `templates.rust.toolchainFile`
 
 | Property | Value |
 |----------|-------|
-| Type | `enum: "stable"`, `"beta"`, `"nightly"` |
-| Default | `"stable"` |
+| Type | `path` |
+| Required | Yes |
 
-Rust toolchain channel.
+Path to `rust-toolchain.toml` file. This file is read by both Nix and rustup.
 
-### `templates.rust.version`
-
-| Property | Value |
-|----------|-------|
-| Type | `null` or `string` |
-| Default | `null` |
-| Example | `"1.75.0"` |
-
-Specific Rust version. If null, uses latest from channel.
+```nix
+templates.rust = {
+  enable = true;
+  toolchainFile = ./rust-toolchain.toml;
+};
+```
 
 ### `templates.rust.edition`
 
@@ -54,26 +96,7 @@ Specific Rust version. If null, uses latest from channel.
 | Type | `string` |
 | Default | `"2024"` |
 
-Rust edition for new projects.
-
-### `templates.rust.components`
-
-| Property | Value |
-|----------|-------|
-| Type | `list of string` |
-| Default | `["rustfmt", "clippy", "rust-analyzer"]` |
-
-Rust components to include.
-
-### `templates.rust.targets`
-
-| Property | Value |
-|----------|-------|
-| Type | `list of string` |
-| Default | `[]` |
-| Example | `["wasm32-unknown-unknown", "aarch64-unknown-linux-gnu"]` |
-
-Additional compilation targets for cross-compilation.
+Rust edition for new projects created with the `new-project` command.
 
 ### `templates.rust.includeCargoTools`
 
@@ -109,49 +132,26 @@ Additional Nix packages to include.
 | `RUST_BACKTRACE` | `1` |
 | `CARGO_TERM_COLOR` | `always` |
 
-## Example Configurations
+## Cargo.toml
 
-### Stable with defaults
+The template includes a `Cargo.toml` with sensible defaults:
 
-```nix
-templates.rust = {
-  enable = true;
-};
+```toml
+[package]
+name = "my-project"
+version = "0.1.0"
+edition = "2024"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
 ```
 
-### Nightly with WASM target
-
-```nix
-templates.rust = {
-  enable = true;
-  channel = "nightly";
-  targets = [ "wasm32-unknown-unknown" ];
-  extraPackages = with pkgs; [
-    wasm-pack
-    wasm-bindgen-cli
-  ];
-};
-```
-
-### Pinned version
-
-```nix
-templates.rust = {
-  enable = true;
-  channel = "stable";
-  version = "1.75.0";
-};
-```
-
-### Minimal setup
-
-```nix
-templates.rust = {
-  enable = true;
-  components = [ "rustfmt" ];  # No clippy or rust-analyzer
-  includeCargoTools = false;   # No cargo-* tools
-};
-```
+**Note:** Rename `my-project` to your actual project name.
 
 ## Included Cargo Tools
 
@@ -164,6 +164,18 @@ When `includeCargoTools = true`:
 | `cargo-audit` | Audit dependencies for vulnerabilities |
 | `cargo-outdated` | Find outdated dependencies |
 | `cargo-nextest` | Next-generation test runner |
+
+## Non-Nix Usage
+
+The `rust-toolchain.toml` file works with rustup:
+
+```bash
+# Without Nix, rustup reads rust-toolchain.toml automatically
+rustup show  # Shows active toolchain
+cargo build  # Uses toolchain from file
+```
+
+This ensures your team can use the same toolchain regardless of whether they use Nix.
 
 ## Exported Packages
 

@@ -15,9 +15,10 @@ nix develop
 ```
 
 You now have:
-- Rust toolchain (stable by default)
-- rust-analyzer, clippy, rustfmt
+- Rust toolchain from `rust-toolchain.toml` (works with rustup too)
+- rust-analyzer, clippy, rustfmt, rust-src
 - cargo-watch, cargo-edit, cargo-audit, cargo-nextest
+- `Cargo.toml` ready to build
 
 ### Python Project
 
@@ -73,16 +74,19 @@ Now the environment activates automatically when you enter the directory.
 
 ## Available Commands
 
-Each shell provides helper commands. Run `menu` to see them:
+The Rust template shows available commands on shell entry:
 
 ```bash
-$ menu
-[rust-dev]
+$ nix develop
+Rust Development Environment
+Toolchain: rustc 1.85.0 (stable)
 
-  rust-info    - Show Rust toolchain information
-  new-project  - Create a new Rust project with edition 2024
-  check-all    - Run cargo check, clippy, and fmt
-  watch        - Watch for changes and run cargo check
+Available commands:
+  cargo build    - Build the project
+  cargo test     - Run tests
+  cargo clippy   - Run linter
+  cargo fmt      - Format code
+  cargo watch    - Watch for changes
 ```
 
 ## Next Steps

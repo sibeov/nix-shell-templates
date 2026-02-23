@@ -82,18 +82,12 @@
       # Rust Development
       # ----------------------------------------
       # Uncomment to enable Rust development
+      # Requires a rust-toolchain.toml file in the project root
       # templates.rust = {
       #   enable = true;
-      #   channel = "stable";               # stable, beta, or nightly
-      #   # version = "1.75.0";             # Specific version (optional)
-      #   edition = "2024";                 # Rust edition
-      #   components = [                    # Toolchain components
-      #     "rustfmt"
-      #     "clippy"
-      #     "rust-analyzer"
-      #   ];
-      #   targets = [ ];                    # Cross-compilation targets
-      #   includeCargoTools = true;         # cargo-watch, cargo-edit, etc.
+      #   toolchainFile = ./rust-toolchain.toml;  # Required: path to toolchain file
+      #   edition = "2024";                       # Rust edition for new projects
+      #   includeCargoTools = true;               # cargo-watch, cargo-edit, etc.
       #   extraPackages = [ ];
       # };
 

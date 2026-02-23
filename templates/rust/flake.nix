@@ -2,38 +2,29 @@
 #
 # Usage: nix flake init -t github:sibeov/nix-shell-templates#rust
 #
-# Provides a complete Rust development environment with:
-# - Rust toolchain (configurable channel/version)
-# - rust-analyzer, clippy, rustfmt
-# - Common cargo tools (cargo-watch, cargo-edit, etc.)
+# This template reads the Rust toolchain from rust-toolchain.toml,
+# making it compatible with both Nix and rustup users.
 {
   description = "Rust development environment";
 
   inputs = {
-    nix-shell-templates.url = "github:sibeov/nix-shell-templates";
-    nixpkgs.follows = "nix-shell-templates/nixpkgs";
-    flake-parts.follows = "nix-shell-templates/flake-parts";
-    devshell.follows = "nix-shell-templates/devshell";
-    rust-overlay.follows = "nix-shell-templates/rust-overlay";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     inputs@{
       self,
-      nix-shell-templates,
       nixpkgs,
       flake-parts,
-      devshell,
       rust-overlay,
       ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        devshell.flakeModule
-        nix-shell-templates.flakeModules.common
-        nix-shell-templates.flakeModules.rust
-      ];
-
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -41,61 +32,64 @@
         "x86_64-darwin"
       ];
 
-      # Project configuration
-      templates.projectName = "rust-project";
-
-      # Rust module configuration
-      templates.rust = {
-        enable = true;
-
-        # Toolchain channel: "stable", "beta", or "nightly"
-        channel = "stable";
-
-        # Specific version (uncomment to pin)
-        # version = "1.75.0";
-
-        # Rust edition for new projects
-        edition = "2024";
-
-        # Components to install
-        components = [
-          "rustfmt"
-          "clippy"
-          "rust-analyzer"
-        ];
-
-        # Cross-compilation targets (uncomment as needed)
-        targets = [
-          # "wasm32-unknown-unknown"
-          # "aarch64-unknown-linux-gnu"
-        ];
-
-        # Include cargo helper tools
-        includeCargoTools = true;
-
-        # Extra packages
-        extraPackages = [ ];
-      };
-
       perSystem =
         {
-          config,
           pkgs,
           system,
           ...
         }:
+        let
+          # Read toolchain from rust-toolchain.toml (works with rustup too)
+          rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+
+          # Common cargo tools
+          cargoTools = with pkgs; [
+            cargo-watch
+            cargo-edit
+            cargo-audit
+            cargo-outdated
+            cargo-nextest
+          ];
+        in
         {
-          # Apply rust overlay for toolchain selection
           _module.args.pkgs = import nixpkgs {
             inherit system;
             overlays = [ rust-overlay.overlays.default ];
           };
 
-          # Default formatter (official Nix formatter per RFC 166)
+          # Export toolchain as a package
+          packages.rust-toolchain = rustToolchain;
+
+          # Default formatter
           formatter = pkgs.nixfmt;
 
-          # Make the Rust shell the default
-          devShells.default = config.devShells.rust;
+          # Development shell
+          devShells.default = pkgs.mkShell {
+            name = "rust-dev";
+
+            buildInputs = [
+              rustToolchain
+            ]
+            ++ cargoTools;
+
+            env = {
+              RUST_BACKTRACE = "1";
+              CARGO_TERM_COLOR = "always";
+            };
+
+            shellHook = ''
+              echo "Rust Development Environment"
+              echo "Toolchain: $(rustc --version)"
+              echo ""
+              echo "Available commands:"
+              echo "  cargo build    - Build the project"
+              echo "  cargo test     - Run tests"
+              echo "  cargo clippy   - Run linter"
+              echo "  cargo fmt      - Format code"
+              echo "  cargo watch    - Watch for changes"
+              echo ""
+            '';
+          };
         };
     };
 }
