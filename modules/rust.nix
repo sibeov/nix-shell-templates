@@ -148,10 +148,10 @@ in
               name = "rust-info";
               help = "Show Rust toolchain information";
               command = ''
-                echo "Rust: $(rustc --version)"
-                echo "Cargo: $(cargo --version)"
-                echo "Rustfmt: $(rustfmt --version 2>/dev/null || echo 'not installed')"
-                echo "Clippy: $(cargo clippy --version 2>/dev/null || echo 'not installed')"
+                echo "Rust    : $(rustc --version)"
+                echo "Cargo   : $(cargo --version)"
+                echo "Rustfmt : $(rustfmt --version 2>/dev/null || echo 'not installed')"
+                echo "Clippy  : $(cargo clippy --version 2>/dev/null || echo 'not installed')"
               '';
             }
             {
