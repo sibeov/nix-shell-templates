@@ -122,8 +122,8 @@
             # Expose nix2container for container building
             _module.args.nix2containerPkgs = nix2container.packages.${system};
 
-            # Default formatter
-            formatter = pkgs.alejandra;
+            # Default formatter (official Nix formatter per RFC 166)
+            formatter = pkgs.nixfmt;
 
             # Development shell for working on this repository
             devshells.default = {
@@ -136,7 +136,7 @@
                 {
                   name = "fmt";
                   help = "Format Nix files";
-                  command = "alejandra .";
+                  command = "nixfmt .";
                 }
                 {
                   name = "check";
@@ -145,7 +145,7 @@
                 }
               ];
               packages = with pkgs; [
-                alejandra
+                nixfmt
                 nil
               ];
             };
