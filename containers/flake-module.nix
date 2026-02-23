@@ -102,8 +102,7 @@ in
               packages = [
                 oss-cad-suite
               ]
-              ++ lib.optionals config.templates.fpga.includeGtkwave [ pkgs.gtkwave ]
-              ++ lib.optionals config.templates.fpga.includeVerilator [ pkgs.verilator ];
+              ++ lib.optionals config.templates.fpga.includeVerible [ pkgs.verible ];
               entrypoint = [ "/bin/bash" ];
               env = {
                 OSS_CAD_SUITE_ROOT = "${oss-cad-suite}";

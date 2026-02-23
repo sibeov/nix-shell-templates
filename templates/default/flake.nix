@@ -73,8 +73,7 @@
       # templates.fpga = {
       #   enable = true;
       #   ossCadSuiteFile = ./oss-cad-suite.nix;  # Required: path to package file
-      #   includeGtkwave = true;                  # Waveform viewer
-      #   includeVerilator = true;                # Verilog simulator
+      #   includeVerible = true;                  # SystemVerilog linter/formatter
       #   extraPackages = [ ];
       # };
 

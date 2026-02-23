@@ -39,10 +39,9 @@
             inherit system;
           };
 
-          # Optional additional tools
+          # Additional SystemVerilog development tools
           extraTools = [
-            pkgs.gtkwave # Waveform viewer
-            pkgs.verilator # Verilog simulator
+            pkgs.verible # SystemVerilog linter/formatter for IDE integration
           ];
         in
         {
@@ -66,8 +65,9 @@
               echo "  nextpnr-*   - Place and route"
               echo "  icepack     - iCE40 bitstream"
               echo "  ecppack     - ECP5 bitstream"
-              echo "  gtkwave     - Waveform viewer"
-              echo "  verilator   - Verilog simulator"
+              echo "  gtkwave     - Waveform viewer (in oss-cad-suite)"
+              echo "  verilator   - Verilog simulator (in oss-cad-suite)"
+              echo "  verible-*   - SystemVerilog linter/formatter"
               echo ""
               echo "To update the toolchain, edit oss-cad-suite.nix"
               echo ""

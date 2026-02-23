@@ -24,18 +24,11 @@ in
       example = lib.literalExpression "./oss-cad-suite.nix";
     };
 
-    # GTKWave for waveform viewing
-    includeGtkwave = lib.mkOption {
+    # Verible for SystemVerilog development
+    includeVerible = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Include GTKWave for waveform viewing";
-    };
-
-    # Verilator for Verilog simulation
-    includeVerilator = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Include Verilator for Verilog simulation";
+      description = "Include Verible for SystemVerilog linting and formatting";
     };
 
     # Additional packages to include
@@ -63,8 +56,7 @@ in
         fpgaPackages = [
           oss-cad-suite
         ]
-        ++ lib.optionals cfg.includeGtkwave [ pkgs.gtkwave ]
-        ++ lib.optionals cfg.includeVerilator [ pkgs.verilator ]
+        ++ lib.optionals cfg.includeVerible [ pkgs.verible ]
         ++ cfg.extraPackages
         ++ config.templates.commonPackages;
       in
@@ -79,7 +71,7 @@ in
             {202}FPGA Development Environment{reset}
             {bold}OSS CAD Suite ${oss-cad-suite.version}{reset}
 
-            Tools available: yosys, nextpnr, icestorm, and more
+            Tools: yosys, nextpnr, gtkwave, verilator (oss-cad-suite) + verible
             $(type -p menu &>/dev/null && menu)
           '';
 

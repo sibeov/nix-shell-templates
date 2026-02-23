@@ -118,23 +118,14 @@ If using the flake module system (instead of the standalone template):
 
 Path to `oss-cad-suite.nix` file containing the package definition.
 
-#### `templates.fpga.includeGtkwave`
+#### `templates.fpga.includeVerible`
 
 | Property | Value |
 |----------|-------|
 | Type | `boolean` |
 | Default | `true` |
 
-Include GTKWave for waveform viewing.
-
-#### `templates.fpga.includeVerilator`
-
-| Property | Value |
-|----------|-------|
-| Type | `boolean` |
-| Default | `true` |
-
-Include Verilator for Verilog simulation.
+Include Verible for SystemVerilog linting and formatting (useful for VSCode extensions).
 
 #### `templates.fpga.extraPackages`
 
@@ -167,7 +158,9 @@ OSS CAD Suite provides:
 | **Synthesis** | Yosys |
 | **Place & Route** | nextpnr (ice40, ecp5, gowin, himbaechel) |
 | **Bitstream** | icestorm, prjtrellis, prjoxide |
-| **Simulation** | Verilator, Icarus Verilog, GHDL |
+| **Simulation** | Verilator, Icarus Verilog, GHDL (in oss-cad-suite) |
+| **Waveforms** | GTKWave (in oss-cad-suite) |
+| **SystemVerilog** | Verible (linter/formatter for IDE integration) |
 | **Formal** | sby (SymbiYosys) |
 | **Python HDL** | Amaranth, Migen |
 

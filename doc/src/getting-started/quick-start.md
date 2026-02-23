@@ -45,8 +45,8 @@ nix develop
 
 You now have:
 - OSS CAD Suite from `oss-cad-suite.nix` (edit to change version)
-- Yosys, nextpnr, icestorm
-- GTKWave, Verilator
+- Yosys, nextpnr, icestorm, GTKWave, Verilator (in oss-cad-suite)
+- Verible for SystemVerilog linting/formatting
 
 ### Typst Documents
 
