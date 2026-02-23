@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.2.1](https://github.com/sibeov/nix-shell-templates/compare/318207dec0500d6e1dc765397400be587093ca8f..0.2.1) - 2026-02-23
+#### Bug Fixes
+- (**fpga**) replace gtkwave/verilator with verible for SystemVerilog development - ([da52e79](https://github.com/sibeov/nix-shell-templates/commit/da52e79990837a13fea8fb5d2f700e26c1884bef)) - Sindre
+#### Refactoring
+- (**fpga**) use local oss-cad-suite.nix for self-contained configuration - ([318207d](https://github.com/sibeov/nix-shell-templates/commit/318207dec0500d6e1dc765397400be587093ca8f)) - Sindre
+
+- - -
+
 ## [0.2.0](https://github.com/sibeov/nix-shell-templates/compare/08ceb12c5663a3fc3004c3646d30461630164140..0.2.0) - 2026-02-23
 #### Features
 - (**.gitignore**) add examples dir to gitignore - ([43acb27](https://github.com/sibeov/nix-shell-templates/commit/43acb2714b125a553c770a54e76e61307a24fd4c)) - Sindre
