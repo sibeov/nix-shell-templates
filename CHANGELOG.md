@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.3.0](https://github.com/sibeov/nix-shell-templates/compare/1930ea0e10d6acd8188dc6f7ef1d89b8c4d0c76f..0.3.0) - 2026-02-23
+#### Features
+- (**templates**) add OCI container support with nix2container - ([1930ea0](https://github.com/sibeov/nix-shell-templates/commit/1930ea0e10d6acd8188dc6f7ef1d89b8c4d0c76f)) - Sindre
+
+- - -
+
 ## [0.2.1](https://github.com/sibeov/nix-shell-templates/compare/318207dec0500d6e1dc765397400be587093ca8f..0.2.1) - 2026-02-23
 #### Bug Fixes
 - (**fpga**) replace gtkwave/verilator with verible for SystemVerilog development - ([da52e79](https://github.com/sibeov/nix-shell-templates/commit/da52e79990837a13fea8fb5d2f700e26c1884bef)) - Sindre
