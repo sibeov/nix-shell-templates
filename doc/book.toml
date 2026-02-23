@@ -1,0 +1,15 @@
+[book]
+authors = ["sibeov"]
+language = "en"
+src = "src"
+title = "nix-shell-templates"
+description = "Modular Nix development environments using flake-parts"
+
+[build]
+build-dir = "book"
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/sibeov/nix-shell-templates"
+edit-url-template = "https://github.com/sibeov/nix-shell-templates/edit/main/doc/{path}"

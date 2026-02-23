@@ -158,8 +158,8 @@
           # Container building support
           _module.args.nix2containerPkgs = nix2container.packages.${system};
 
-          # Default formatter
-          formatter = pkgs.alejandra;
+          # Default formatter (official Nix formatter per RFC 166)
+          formatter = pkgs.nixfmt;
 
           # You can add additional packages, devShells, etc. here
           # packages.mypackage = ...;

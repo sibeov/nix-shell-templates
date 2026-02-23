@@ -82,8 +82,8 @@
           ...
         }:
         {
-          # Default formatter
-          formatter = pkgs.alejandra;
+          # Default formatter (official Nix formatter per RFC 166)
+          formatter = pkgs.nixfmt;
 
           # Make the Python shell the default
           devShells.default = config.devShells.python;

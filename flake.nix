@@ -143,10 +143,23 @@
                   help = "Run flake check";
                   command = "nix flake check";
                 }
+                {
+                  name = "doc-serve";
+                  help = "Serve documentation locally";
+                  command = "mdbook serve doc";
+                  category = "documentation";
+                }
+                {
+                  name = "doc-build";
+                  help = "Build documentation";
+                  command = "mdbook build doc";
+                  category = "documentation";
+                }
               ];
               packages = with pkgs; [
                 nixfmt
                 nil
+                mdbook
               ];
             };
           };

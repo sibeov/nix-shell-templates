@@ -91,8 +91,8 @@
             overlays = [ rust-overlay.overlays.default ];
           };
 
-          # Default formatter
-          formatter = pkgs.alejandra;
+          # Default formatter (official Nix formatter per RFC 166)
+          formatter = pkgs.nixfmt;
 
           # Make the Rust shell the default
           devShells.default = config.devShells.rust;
