@@ -144,17 +144,25 @@ in
         pythonContainer =
           if config.templates.python.enable && hasNix2Container then
             let
-              python = pkgs.${config.templates.python.pythonVersion};
+              # Parse .python-version file
+              content = builtins.readFile config.templates.python.pythonVersionFile;
+              versionRaw = builtins.head (builtins.split "\n" content);
+              parts = builtins.split "\\." versionRaw;
+              major = builtins.elemAt parts 0;
+              minor = builtins.elemAt parts 2;
+              pythonPkgName = "python${major}${minor}";
+              python = pkgs.${pythonPkgName} or pkgs.python3;
             in
             buildContainer {
               name = "python";
               packages = [
                 python
+                pkgs.uv
               ]
-              ++ lib.optionals config.templates.python.useUv [ pkgs.uv ]
               ++ lib.optionals config.templates.python.includeDevTools [
                 pkgs.ruff
                 pkgs.mypy
+                pkgs.pyright
               ];
               entrypoint = [ "/bin/bash" ];
               env = {

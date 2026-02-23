@@ -1,14 +1,24 @@
 # Python Module
 
-Provides a modern Python development environment with virtualenv support.
+Provides a modern Python development environment using standard configuration files.
+
+## Philosophy
+
+This module is designed to be **Nix-agnostic**. Your project configuration lives in standard files that work everywhere:
+
+| File | Purpose |
+|------|---------|
+| `.python-version` | Python version (pyenv-compatible) |
+| `pyproject.toml` | Project metadata and tool configuration |
+
+The same configuration works with Nix, pyenv, uv, pip, and any other Python tooling.
 
 ## Features
 
-- **Python versions**: 3.11, 3.12, 3.13
+- **Standard configuration**: `.python-version` and `pyproject.toml`
 - **Fast package management**: uv by default
 - **Automatic virtualenv**: Created on shell entry
-- **Development tools**: ruff, mypy included
-- **Jupyter support**: Optional notebook environment
+- **Development tools**: ruff, mypy, pyright included
 
 ## Quick Start
 
@@ -17,36 +27,82 @@ nix flake init -t github:sibeov/nix-shell-templates#python
 nix develop
 ```
 
-## Options
+This creates:
+- `flake.nix` - Standalone Nix flake (no module dependencies)
+- `.python-version` - Python version (default: 3.13)
+- `pyproject.toml` - Project scaffold with tool configuration
 
-### `templates.python.enable`
+## Configuration Files
+
+### .python-version
+
+Simple file containing the Python version:
+
+```
+3.13
+```
+
+This format is compatible with:
+- pyenv
+- asdf
+- mise
+- uv (reads automatically)
+
+### pyproject.toml
+
+Standard Python project configuration:
+
+```toml
+[project]
+name = "my-project"
+requires-python = ">=3.13, <3.14"
+dependencies = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = false
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"
+```
+
+## Using the Module
+
+If using the flake module system (instead of the standalone template):
+
+```nix
+{
+  imports = [
+    nix-shell-templates.flakeModules.python
+  ];
+
+  templates.python = {
+    enable = true;
+    pythonVersionFile = ./.python-version;  # Required
+  };
+}
+```
+
+### Module Options
+
+#### `templates.python.pythonVersionFile`
 
 | Property | Value |
 |----------|-------|
-| Type | `boolean` |
-| Default | `false` |
+| Type | `path` |
+| Required | Yes |
 
-Enable the Python development environment.
+Path to `.python-version` file. Format: `3.13` or `3.13.1` (major.minor used).
 
-### `templates.python.pythonVersion`
-
-| Property | Value |
-|----------|-------|
-| Type | `enum: "python3"`, `"python311"`, `"python312"`, `"python313"` |
-| Default | `"python312"` |
-
-Python version to use.
-
-### `templates.python.withVenv`
-
-| Property | Value |
-|----------|-------|
-| Type | `boolean` |
-| Default | `true` |
-
-Enable virtualenv support with automatic venv creation on shell entry.
-
-### `templates.python.venvDir`
+#### `templates.python.venvDir`
 
 | Property | Value |
 |----------|-------|
@@ -55,25 +111,16 @@ Enable virtualenv support with automatic venv creation on shell entry.
 
 Virtual environment directory name.
 
-### `templates.python.useUv`
+#### `templates.python.includeDevTools`
 
 | Property | Value |
 |----------|-------|
 | Type | `boolean` |
 | Default | `true` |
 
-Use [uv](https://github.com/astral-sh/uv) (fast Python package manager) instead of pip.
+Include development tools (ruff, mypy, pyright).
 
-### `templates.python.includeDevTools`
-
-| Property | Value |
-|----------|-------|
-| Type | `boolean` |
-| Default | `true` |
-
-Include common development tools (ruff, mypy).
-
-### `templates.python.includeJupyter`
+#### `templates.python.includeJupyter`
 
 | Property | Value |
 |----------|-------|
@@ -82,17 +129,7 @@ Include common development tools (ruff, mypy).
 
 Include Jupyter notebook support.
 
-### `templates.python.pythonPackages`
-
-| Property | Value |
-|----------|-------|
-| Type | `list of string` |
-| Default | `[]` |
-| Example | `["requests", "numpy", "pandas"]` |
-
-Python packages to install in the virtual environment (via pip/uv).
-
-### `templates.python.extraPackages`
+#### `templates.python.extraPackages`
 
 | Property | Value |
 |----------|-------|
@@ -106,8 +143,8 @@ Additional Nix packages to include.
 | Command | Description |
 |---------|-------------|
 | `py-info` | Show Python environment information |
-| `py-install <packages>` | Install Python packages |
-| `py-sync` | Sync packages from requirements.txt |
+| `py-install <packages>` | Install Python packages with uv |
+| `py-sync` | Sync from pyproject.toml or requirements.txt |
 | `lint` | Run ruff linter |
 | `format` | Format code with ruff |
 | `typecheck` | Run mypy type checker |
@@ -118,7 +155,7 @@ Additional Nix packages to include.
 |----------|-------|
 | `PYTHONDONTWRITEBYTECODE` | `1` |
 | `PYTHONUNBUFFERED` | `1` |
-| `VIRTUAL_ENV` | `$PRJ_ROOT/.venv` (when withVenv enabled) |
+| `VIRTUAL_ENV` | `$PRJ_ROOT/.venv` |
 
 ## Example Configurations
 
@@ -127,13 +164,12 @@ Additional Nix packages to include.
 ```nix
 templates.python = {
   enable = true;
-  pythonVersion = "python312";
+  pythonVersionFile = ./.python-version;
   includeJupyter = true;
-  pythonPackages = [
-    "numpy"
-    "pandas"
-    "matplotlib"
-    "scikit-learn"
+  extraPackages = with pkgs; [
+    # System libraries for scipy, etc.
+    openblas
+    lapack
   ];
 };
 ```
@@ -143,13 +179,7 @@ templates.python = {
 ```nix
 templates.python = {
   enable = true;
-  pythonVersion = "python312";
-  pythonPackages = [
-    "fastapi"
-    "uvicorn"
-    "sqlalchemy"
-    "pydantic"
-  ];
+  pythonVersionFile = ./.python-version;
   extraPackages = with pkgs; [
     postgresql
     redis
@@ -157,40 +187,63 @@ templates.python = {
 };
 ```
 
-### Using pip instead of uv
-
-```nix
-templates.python = {
-  enable = true;
-  useUv = false;
-};
-```
-
-### Custom venv location
-
-```nix
-templates.python = {
-  enable = true;
-  venvDir = ".python-venv";
-};
-```
-
 ## Workflow
 
 1. **Enter shell**: `nix develop`
 2. **Venv created**: Automatically in `.venv/`
-3. **Install deps**: `py-install requests` or edit `requirements.txt` then `py-sync`
-4. **Lint**: `lint` (runs ruff)
-5. **Format**: `format` (runs ruff format)
-6. **Type check**: `typecheck` (runs mypy)
+3. **Install deps**: `uv pip install -e .` or `py-sync`
+4. **Add packages**: `uv add requests` (updates pyproject.toml)
+5. **Lint**: `lint` or `ruff check .`
+6. **Format**: `format` or `ruff format .`
+7. **Type check**: `typecheck` or `mypy .`
 
-## Why uv?
+## Why This Approach?
 
-[uv](https://github.com/astral-sh/uv) is a fast Python package installer written in Rust:
+### Cross-Environment Compatibility
+
+Your `.python-version` works with:
+- **Nix**: Reads and maps to nixpkgs Python
+- **pyenv**: Native support
+- **asdf/mise**: Native support
+- **uv**: Reads automatically for venv creation
+
+Your `pyproject.toml` works with:
+- **uv**: `uv pip install -e .`, `uv add`, `uv sync`
+- **pip**: `pip install -e .`
+- **setuptools**: Standard build backend
+- **ruff/mypy/pyright**: Read `[tool.*]` sections
+
+### Why uv?
+
+[uv](https://github.com/astral-sh/uv) is a fast Python package manager written in Rust:
 
 - **10-100x faster** than pip
-- **Compatible** with pip's interface
+- **Compatible** with pip interface
 - **Reliable** dependency resolution
-- **Built-in venv** creation
+- **Built-in** venv creation
+- **Reads** `.python-version` automatically
 
-Set `useUv = false` if you prefer traditional pip.
+## Changing Python Version
+
+1. Edit `.python-version`:
+   ```
+   3.12
+   ```
+
+2. Update `pyproject.toml` tool sections:
+   ```toml
+   [tool.ruff]
+   target-version = "py312"
+
+   [tool.mypy]
+   python_version = "3.12"
+
+   [tool.pyright]
+   pythonVersion = "3.12"
+   ```
+
+3. Re-enter the shell:
+   ```bash
+   exit
+   nix develop
+   ```

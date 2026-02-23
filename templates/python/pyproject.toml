@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project"
+description = "Project description"
+authors = [
+	{ name = "Your Name", email = "you@example.com" },
+]
+readme = "README.md"
+requires-python = ">=3.13, <3.14"
+classifiers = [
+	"Programming Language :: Python",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.13",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+	"pytest>=8.0",
+	"pytest-cov>=4.0",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "project._version.__version__"}
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+	"E",     # pycodestyle errors
+	"F",     # pyflakes
+	"I",     # isort
+	"UP",    # pyupgrade
+	"B",     # flake8-bugbear
+	"SIM",   # flake8-simplify
+	"RUF",   # ruff-specific rules
+]
+ignore = ["E203"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.pyright]
+typeCheckingMode = "basic"
+reportMissingImports = "warning"
+reportMissingTypeStubs = false
+reportUnusedVariable = true
+exclude = ["build", "dist", ".venv"]
+include = ["src"]
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+
+[tool.mypy]
+ignore_missing_imports = true
+python_version = "3.13"
+disallow_untyped_defs = false
+strict = false
+mypy_path = "src"
+cache_dir = ".mypy_cache"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+	"pragma: no cover",
+	"if __name__ == .__main__.:",
+]

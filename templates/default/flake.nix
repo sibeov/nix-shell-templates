@@ -95,15 +95,13 @@
       # Python Development
       # ----------------------------------------
       # Uncomment to enable Python development
+      # Requires a .python-version file in the project root (e.g., "3.13")
       # templates.python = {
       #   enable = true;
-      #   pythonVersion = "python312";      # python3, python311, python312, python313
-      #   withVenv = true;                  # Auto-create virtualenv
-      #   venvDir = ".venv";                # Venv directory
-      #   useUv = true;                     # Use uv instead of pip
-      #   includeDevTools = true;           # ruff, mypy
-      #   includeJupyter = false;           # Jupyter notebook
-      #   pythonPackages = [ ];             # Pip packages to install
+      #   pythonVersionFile = ./.python-version;  # Required: path to version file
+      #   venvDir = ".venv";                      # Virtual environment directory
+      #   includeDevTools = true;                 # ruff, mypy, pyright
+      #   includeJupyter = false;                 # Jupyter notebook
       #   extraPackages = [ ];
       # };
 

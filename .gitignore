@@ -10,3 +10,6 @@ doc/book
 
 # Examples
 examples/
+
+# Include .python-version in templates (overrides global gitignore)
+!templates/**/.python-version

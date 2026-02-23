@@ -29,10 +29,11 @@ nix develop
 ```
 
 You now have:
-- Python 3.12
+- Python from `.python-version` (works with pyenv too)
 - uv (fast package manager)
-- ruff, mypy
+- ruff, mypy, pyright
 - Automatic virtualenv creation
+- `pyproject.toml` with tool configuration
 
 ### FPGA Project
 

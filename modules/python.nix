@@ -1,7 +1,8 @@
 # Python development module
 #
-# Provides a modern Python development environment.
-# Supports virtualenv, pip, and optional uv (fast package manager).
+# Provides a Python development environment using:
+# - .python-version file for Python version (pyenv-compatible)
+# - uv for fast package management
 {
   lib,
   config,
@@ -9,49 +10,47 @@
 }:
 let
   cfg = config.templates.python;
+
+  # Parse .python-version file to get nixpkgs Python package name
+  # File format: "3.13" or "3.13.1" (we use major.minor)
+  parsePythonVersion =
+    versionFile:
+    let
+      content = builtins.readFile versionFile;
+      versionRaw = builtins.head (builtins.split "\n" content);
+      parts = builtins.split "\\." versionRaw;
+      major = builtins.elemAt parts 0;
+      minor = builtins.elemAt parts 2;
+    in
+    "python${major}${minor}";
 in
 {
   options.templates.python = {
     enable = lib.mkEnableOption "Python development environment";
 
-    # Python version
-    pythonVersion = lib.mkOption {
-      type = lib.types.enum [
-        "python3"
-        "python311"
-        "python312"
-        "python313"
-      ];
-      default = "python312";
-      description = "Python version to use";
+    # Python version file (required)
+    pythonVersionFile = lib.mkOption {
+      type = lib.types.path;
+      description = ''
+        Path to .python-version file containing the Python version.
+        Format: "3.13" or "3.13.1" (major.minor used).
+        This file is compatible with pyenv and other Python version managers.
+      '';
+      example = lib.literalExpression "./.python-version";
     };
 
-    # Enable virtualenv support
-    withVenv = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable virtualenv support with automatic venv creation";
-    };
-
-    # Venv directory name
+    # Virtual environment directory
     venvDir = lib.mkOption {
       type = lib.types.str;
       default = ".venv";
       description = "Virtual environment directory name";
     };
 
-    # Use uv instead of pip
-    useUv = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Use uv (fast Python package manager) instead of pip";
-    };
-
     # Include development tools
     includeDevTools = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Include common development tools (black, ruff, mypy, pytest)";
+      description = "Include development tools (ruff, mypy, pyright)";
     };
 
     # Include Jupyter
@@ -59,18 +58,6 @@ in
       type = lib.types.bool;
       default = false;
       description = "Include Jupyter notebook support";
-    };
-
-    # Additional Python packages (as strings, installed via pip/uv)
-    pythonPackages = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      example = [
-        "requests"
-        "numpy"
-        "pandas"
-      ];
-      description = "Python packages to install in the virtual environment";
     };
 
     # Additional Nix packages
@@ -85,17 +72,17 @@ in
     perSystem =
       { pkgs, ... }:
       let
-        # Select Python version
-        python = pkgs.${cfg.pythonVersion};
+        # Get Python version from file
+        pythonPkgName = parsePythonVersion cfg.pythonVersionFile;
+        python = pkgs.${pythonPkgName} or pkgs.python3;
 
         # Development tools
         devTools = lib.optionals cfg.includeDevTools [
+          pkgs.uv
           pkgs.ruff
           pkgs.mypy
+          pkgs.pyright
         ];
-
-        # Package manager
-        packageManager = if cfg.useUv then [ pkgs.uv ] else [ ];
 
         # Jupyter support
         jupyterPkgs = lib.optionals cfg.includeJupyter [
@@ -105,46 +92,37 @@ in
           ]))
         ];
 
-        # All Python-related packages
-        pythonPackages = [
+        # All packages
+        allPackages = [
           python
         ]
-        ++ packageManager
         ++ devTools
         ++ jupyterPkgs
         ++ cfg.extraPackages
         ++ config.templates.commonPackages;
 
         # Venv setup script
-        venvSetupScript =
-          if cfg.withVenv then
-            ''
-              if [ ! -d "${cfg.venvDir}" ]; then
-                echo "Creating virtual environment in ${cfg.venvDir}..."
-                ${if cfg.useUv then "uv venv ${cfg.venvDir}" else "${python}/bin/python -m venv ${cfg.venvDir}"}
-              fi
-              source "${cfg.venvDir}/bin/activate"
-              echo "Virtual environment activated: ${cfg.venvDir}"
-            ''
-          else
-            "";
-
-        # Package install command
-        installCmd = if cfg.useUv then "uv pip install" else "pip install";
+        venvSetupScript = ''
+          if [ ! -d "${cfg.venvDir}" ]; then
+            echo "Creating virtual environment in ${cfg.venvDir}..."
+            uv venv ${cfg.venvDir}
+          fi
+          source "${cfg.venvDir}/bin/activate"
+          echo "Virtual environment activated: ${cfg.venvDir}"
+        '';
       in
       {
-        # Development shell using devshell
         devshells.python = {
           name = "python-dev";
           motd = ''
             {202}Python Development Environment{reset}
-            {bold}Python: ${cfg.pythonVersion}${lib.optionalString cfg.useUv " | Package Manager: uv"}{reset}
-            ${lib.optionalString cfg.withVenv "Virtual env: ${cfg.venvDir}"}
+            {bold}Python: ${pythonPkgName} | Package Manager: uv{reset}
+            Virtual env: ${cfg.venvDir}
 
             $(type -p menu &>/dev/null && menu)
           '';
 
-          packages = pythonPackages;
+          packages = allPackages;
 
           env = [
             {
@@ -155,8 +133,6 @@ in
               name = "PYTHONUNBUFFERED";
               value = "1";
             }
-          ]
-          ++ lib.optionals cfg.withVenv [
             {
               name = "VIRTUAL_ENV";
               eval = "$PRJ_ROOT/${cfg.venvDir}";
@@ -171,21 +147,28 @@ in
               help = "Show Python environment information";
               command = ''
                 echo "Python: $(python --version)"
-                echo "Pip: $(pip --version 2>/dev/null || echo 'not available')"
-                ${lib.optionalString cfg.useUv "echo \"uv: $(uv --version)\""}
-                ${lib.optionalString cfg.withVenv "echo \"Venv: $VIRTUAL_ENV\""}
+                echo "uv: $(uv --version)"
+                echo "Venv: $VIRTUAL_ENV"
               '';
             }
             {
               name = "py-install";
               help = "Install Python packages";
-              command = "${installCmd} \"$@\"";
+              command = "uv pip install \"$@\"";
               category = "packages";
             }
             {
               name = "py-sync";
-              help = "Sync packages from requirements.txt";
-              command = if cfg.useUv then "uv pip sync requirements.txt" else "pip install -r requirements.txt";
+              help = "Sync packages from requirements.txt or pyproject.toml";
+              command = ''
+                if [ -f "pyproject.toml" ]; then
+                  uv pip install -e .
+                elif [ -f "requirements.txt" ]; then
+                  uv pip sync requirements.txt
+                else
+                  echo "No pyproject.toml or requirements.txt found"
+                fi
+              '';
               category = "packages";
             }
             {

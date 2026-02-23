@@ -2,37 +2,23 @@
 #
 # Usage: nix flake init -t github:sibeov/nix-shell-templates#python
 #
-# Provides a complete Python development environment with:
-# - Python 3.12 (configurable)
-# - uv (fast package manager) or pip
-# - Virtual environment support
-# - ruff, mypy for linting and type checking
+# A standalone Python development environment using:
+# - .python-version: Python version (pyenv-compatible)
+# - pyproject.toml: Project config with tool settings (ruff, mypy, pyright, etc.)
+#
+# This template is Nix-agnostic: the same configuration files work with
+# pyenv, uv, pip, and other Python tooling outside of Nix.
 {
   description = "Python development environment";
 
   inputs = {
-    nix-shell-templates.url = "github:sibeov/nix-shell-templates";
-    nixpkgs.follows = "nix-shell-templates/nixpkgs";
-    flake-parts.follows = "nix-shell-templates/flake-parts";
-    devshell.follows = "nix-shell-templates/devshell";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
   outputs =
-    inputs@{
-      self,
-      nix-shell-templates,
-      nixpkgs,
-      flake-parts,
-      devshell,
-      ...
-    }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        devshell.flakeModule
-        nix-shell-templates.flakeModules.common
-        nix-shell-templates.flakeModules.python
-      ];
-
+    { nixpkgs, ... }:
+    let
+      # Supported systems
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -40,53 +26,80 @@
         "x86_64-darwin"
       ];
 
-      # Project configuration
-      templates.projectName = "python-project";
+      # Helper to generate per-system attributes
+      forAllSystems = nixpkgs.lib.genAttrs systems;
 
-      # Python module configuration
-      templates.python = {
-        enable = true;
+      # Read Python version from .python-version file
+      # Format: "3.13" or "3.13.1" (we use major.minor)
+      pythonVersionFile = builtins.readFile ./.python-version;
+      pythonVersionRaw = builtins.head (builtins.split "\n" pythonVersionFile);
 
-        # Python version
-        pythonVersion = "python312";
+      # Map version string to nixpkgs Python package name
+      # "3.13" -> "python313", "3.12" -> "python312", etc.
+      pythonVersionParts = builtins.split "\\." pythonVersionRaw;
+      pythonMajor = builtins.elemAt pythonVersionParts 0;
+      pythonMinor = builtins.elemAt pythonVersionParts 2;
+      pythonPkgName = "python${pythonMajor}${pythonMinor}";
+    in
+    {
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
 
-        # Virtual environment settings
-        withVenv = true;
-        venvDir = ".venv";
+          # Get Python from nixpkgs
+          python = pkgs.${pythonPkgName} or pkgs.python3;
 
-        # Use uv for fast package management
-        useUv = true;
+          # Virtual environment directory
+          venvDir = ".venv";
 
-        # Include dev tools (ruff, mypy)
-        includeDevTools = true;
-
-        # Jupyter notebook support (uncomment if needed)
-        includeJupyter = false;
-
-        # Python packages to install (via pip/uv)
-        pythonPackages = [
-          # "requests"
-          # "numpy"
-          # "pandas"
-        ];
-
-        # Extra Nix packages
-        extraPackages = [ ];
-      };
-
-      perSystem =
+          # Development tools from nixpkgs
+          devTools = [
+            pkgs.uv # Fast Python package manager
+            pkgs.ruff # Linter and formatter
+            pkgs.mypy # Type checker
+            pkgs.pyright # Type checker (alternative)
+          ];
+        in
         {
-          config,
-          pkgs,
-          system,
-          ...
-        }:
-        {
-          # Default formatter (official Nix formatter per RFC 166)
-          formatter = pkgs.nixfmt;
+          default = pkgs.mkShell {
+            name = "python-dev";
 
-          # Make the Python shell the default
-          devShells.default = config.devShells.python;
-        };
+            packages = [ python ] ++ devTools;
+
+            env = {
+              PYTHONDONTWRITEBYTECODE = "1";
+              PYTHONUNBUFFERED = "1";
+            };
+
+            shellHook = ''
+              # Create venv if it doesn't exist
+              if [ ! -d "${venvDir}" ]; then
+                echo "Creating virtual environment in ${venvDir}..."
+                uv venv ${venvDir}
+              fi
+
+              # Activate venv
+              source "${venvDir}/bin/activate"
+
+              echo ""
+              echo "Python Development Environment"
+              echo "==============================="
+              echo "Python: $(python --version)"
+              echo "uv:     $(uv --version)"
+              echo "Venv:   ${venvDir}"
+              echo ""
+              echo "Commands:"
+              echo "  uv pip install <pkg>  - Install packages"
+              echo "  uv pip sync           - Sync from requirements"
+              echo "  uv pip compile        - Lock dependencies"
+              echo "  ruff check .          - Lint code"
+              echo "  ruff format .         - Format code"
+              echo "  mypy .                - Type check"
+              echo ""
+            '';
+          };
+        }
+      );
     };
 }
