@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.1.0](https://github.com/sibeov/nix-shell-templates/compare/09828f858b4564a6b4bad6a168d0cf0a34e178c0..0.1.0) - 2026-02-23
+#### Features
+- (**flake-parts**) restructure with modular devshell templates - ([3d834c4](https://github.com/sibeov/nix-shell-templates/commit/3d834c45a0a1e28c83b193a5e8afb9326c50bdf5)) - Sindre
+#### Build system
+- (**cog**) improve cocogitto configuration and add VERSION file - ([09828f8](https://github.com/sibeov/nix-shell-templates/commit/09828f858b4564a6b4bad6a168d0cf0a34e178c0)) - Sindre
+- (**flake.nix**) initial addition - ([37e52fc](https://github.com/sibeov/nix-shell-templates/commit/37e52fcbe0876b90a34cd60d5265fa208746ba0f)) - Sindre
+
+- - -
+
 ## 0.0.1 - 2026-02-23
 #### Bug Fixes
 - (**templates/**) add oss-cad-suite.nix - (7006c60) - Sindre
