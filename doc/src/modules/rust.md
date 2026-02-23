@@ -182,3 +182,40 @@ This ensures your team can use the same toolchain regardless of whether they use
 | Package | Description |
 |---------|-------------|
 | `packages.rust-toolchain` | The configured Rust toolchain |
+| `packages.ociImage` | OCI container image with development environment |
+
+## Container Support
+
+Each Rust template includes OCI image building capabilities:
+
+### Building Images
+
+```bash
+# Build the development environment as an OCI image
+nix build .#ociImage
+
+# Load into Docker daemon
+./result/bin/copy-to-docker-daemon
+
+# Or load with docker load (alternative)
+./result | docker load
+```
+
+### Pushing Images
+
+```bash
+# Push to a container registry
+nix run .#pushImage
+
+# With custom registry
+nix run .#pushImage -- --registry=my-registry.com
+```
+
+### Image Contents
+
+The OCI image includes:
+- Rust toolchain from `rust-toolchain.toml`
+- All cargo tools (cargo-watch, cargo-edit, etc.)
+- Git, bash, coreutils
+- Working directory: `/workspace`
+- Entry point: `/bin/bash`

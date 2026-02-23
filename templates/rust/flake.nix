@@ -14,6 +14,10 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix2container = {
+      url = "github:nlewo/nix2container";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -36,6 +40,8 @@
         {
           pkgs,
           system,
+          inputs',
+          config,
           ...
         }:
         let
@@ -60,8 +66,52 @@
           # Export toolchain as a package
           packages.rust-toolchain = rustToolchain;
 
+          # OCI image for containerized development
+          packages.ociImage =
+            let
+              n2c = inputs'.nix2container.packages.nix2container;
+            in
+            n2c.buildImage {
+              name = "rust-dev";
+              tag = "latest";
+              copyToRoot = pkgs.buildEnv {
+                name = "root";
+                paths = [
+                  rustToolchain
+                  pkgs.bashInteractive
+                  pkgs.coreutils
+                  pkgs.git
+                ]
+                ++ cargoTools;
+                pathsToLink = [
+                  "/bin"
+                  "/lib"
+                  "/share"
+                ];
+              };
+              config = {
+                Entrypoint = [ "/bin/bash" ];
+                Env = [
+                  "RUST_BACKTRACE=1"
+                  "CARGO_TERM_COLOR=always"
+                  "USER=rust"
+                ];
+                WorkingDir = "/workspace";
+                Labels = {
+                  "org.opencontainers.image.description" = "Rust development environment";
+                  "org.opencontainers.image.source" = "https://github.com/sibeov/nix-shell-templates";
+                };
+              };
+            };
+
           # Default formatter
           formatter = pkgs.nixfmt;
+
+          # Apps for container management
+          apps.pushImage = {
+            type = "app";
+            program = "${config.packages.ociImage}/bin/copy-to-registry";
+          };
 
           # Development shell
           devShells.default = pkgs.mkShell {
@@ -87,6 +137,10 @@
               echo "  cargo clippy   - Run linter"
               echo "  cargo fmt      - Format code"
               echo "  cargo watch    - Watch for changes"
+              echo ""
+              echo "Container commands:"
+              echo "  nix build .#ociImage           - Build OCI image"
+              echo "  nix run .#pushImage            - Push to registry"
               echo ""
             '';
           };

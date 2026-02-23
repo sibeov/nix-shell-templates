@@ -75,7 +75,7 @@ Now the environment activates automatically when you enter the directory.
 
 ## Available Commands
 
-The Rust template shows available commands on shell entry:
+The templates show available commands on shell entry:
 
 ```bash
 $ nix develop
@@ -88,6 +88,25 @@ Available commands:
   cargo clippy   - Run linter
   cargo fmt      - Format code
   cargo watch    - Watch for changes
+
+Container commands:
+  nix build .#ociImage           - Build OCI image
+  nix run .#pushImage            - Push to registry
+```
+
+## Container Support
+
+Each template includes OCI image building with nix2container:
+
+```bash
+# Build development environment as OCI image
+nix build .#ociImage
+
+# Load into Docker
+./result/bin/copy-to-docker-daemon
+
+# Push to registry (requires registry configuration)
+nix run .#pushImage
 ```
 
 ## Next Steps

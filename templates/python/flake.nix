@@ -13,12 +13,22 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    nix2container = {
+      url = "github:nlewo/nix2container";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { nixpkgs, ... }:
-    let
-      # Supported systems
+    inputs@{
+      self,
+      nixpkgs,
+      flake-parts,
+      nix2container,
+      ...
+    }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -26,26 +36,26 @@
         "x86_64-darwin"
       ];
 
-      # Helper to generate per-system attributes
-      forAllSystems = nixpkgs.lib.genAttrs systems;
-
-      # Read Python version from .python-version file
-      # Format: "3.13" or "3.13.1" (we use major.minor)
-      pythonVersionFile = builtins.readFile ./.python-version;
-      pythonVersionRaw = builtins.head (builtins.split "\n" pythonVersionFile);
-
-      # Map version string to nixpkgs Python package name
-      # "3.13" -> "python313", "3.12" -> "python312", etc.
-      pythonVersionParts = builtins.split "\\." pythonVersionRaw;
-      pythonMajor = builtins.elemAt pythonVersionParts 0;
-      pythonMinor = builtins.elemAt pythonVersionParts 2;
-      pythonPkgName = "python${pythonMajor}${pythonMinor}";
-    in
-    {
-      devShells = forAllSystems (
-        system:
+      perSystem =
+        {
+          pkgs,
+          system,
+          inputs',
+          config,
+          ...
+        }:
         let
-          pkgs = import nixpkgs { inherit system; };
+          # Read Python version from .python-version file
+          # Format: "3.13" or "3.13.1" (we use major.minor)
+          pythonVersionFile = builtins.readFile ./.python-version;
+          pythonVersionRaw = builtins.head (builtins.split "\n" pythonVersionFile);
+
+          # Map version string to nixpkgs Python package name
+          # "3.13" -> "python313", "3.12" -> "python312", etc.
+          pythonVersionParts = builtins.split "\\." pythonVersionRaw;
+          pythonMajor = builtins.elemAt pythonVersionParts 0;
+          pythonMinor = builtins.elemAt pythonVersionParts 2;
+          pythonPkgName = "python${pythonMajor}${pythonMinor}";
 
           # Get Python from nixpkgs
           python = pkgs.${pythonPkgName} or pkgs.python3;
@@ -62,7 +72,58 @@
           ];
         in
         {
-          default = pkgs.mkShell {
+          # Export Python as a package
+          packages.python = python;
+
+          # OCI image for containerized development
+          packages.ociImage =
+            let
+              n2c = inputs'.nix2container.packages.nix2container;
+            in
+            n2c.buildImage {
+              name = "python-dev";
+              tag = "latest";
+              copyToRoot = pkgs.buildEnv {
+                name = "root";
+                paths = [
+                  python
+                  pkgs.bashInteractive
+                  pkgs.coreutils
+                  pkgs.git
+                ]
+                ++ devTools;
+                pathsToLink = [
+                  "/bin"
+                  "/lib"
+                  "/share"
+                ];
+              };
+              config = {
+                Entrypoint = [ "/bin/bash" ];
+                Env = [
+                  "PYTHONDONTWRITEBYTECODE=1"
+                  "PYTHONUNBUFFERED=1"
+                  "USER=python"
+                ];
+                WorkingDir = "/workspace";
+                Labels = {
+                  "org.opencontainers.image.description" = "Python development environment";
+                  "org.opencontainers.image.source" = "https://github.com/sibeov/nix-shell-templates";
+                };
+              };
+            };
+
+          # Default formatter
+          formatter = pkgs.nixfmt;
+
+          # Apps for container management
+          apps.pushImage = {
+            type = "app";
+            program = "${config.packages.ociImage}/bin/copy-to-registry";
+          };
+
+          # Development shell
+          devShells.default = pkgs.mkShell {
             name = "python-dev";
 
             packages = [ python ] ++ devTools;
@@ -97,9 +158,12 @@
               echo "  ruff format .         - Format code"
               echo "  mypy .                - Type check"
               echo ""
+              echo "Container commands:"
+              echo "  nix build .#ociImage  - Build OCI image"
+              echo "  nix run .#pushImage   - Push to registry"
+              echo ""
             '';
           };
-        }
-      );
+        };
     };
 }
