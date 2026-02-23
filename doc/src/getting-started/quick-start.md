@@ -44,9 +44,9 @@ nix develop
 ```
 
 You now have:
-- OSS CAD Suite (Yosys, nextpnr, icestorm)
-- GTKWave
-- Verilator
+- OSS CAD Suite from `oss-cad-suite.nix` (edit to change version)
+- Yosys, nextpnr, icestorm
+- GTKWave, Verilator
 
 ### Typst Documents
 

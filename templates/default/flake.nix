@@ -69,13 +69,13 @@
       # FPGA Development
       # ----------------------------------------
       # Uncomment to enable FPGA development with oss-cad-suite
+      # Requires an oss-cad-suite.nix file in the project root
       # templates.fpga = {
       #   enable = true;
-      #   version = "2026-01-26";          # OSS CAD Suite version
-      #   dateVersion = "20260126";         # Date format for download URL
-      #   includeGtkwave = true;            # Waveform viewer
-      #   includeVerilator = true;          # Verilog simulator
-      #   extraPackages = [ ];              # Additional packages
+      #   ossCadSuiteFile = ./oss-cad-suite.nix;  # Required: path to package file
+      #   includeGtkwave = true;                  # Waveform viewer
+      #   includeVerilator = true;                # Verilog simulator
+      #   extraPackages = [ ];
       # };
 
       # ----------------------------------------

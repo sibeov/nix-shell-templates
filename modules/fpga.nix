@@ -1,7 +1,7 @@
 # FPGA development module
 #
-# Provides a complete FPGA development environment using oss-cad-suite.
-# Includes: Yosys, nextpnr, icestorm, and related tools.
+# Provides an FPGA development environment using a local oss-cad-suite.nix file.
+# The file defines the OSS CAD Suite package with version and hashes.
 {
   lib,
   config,
@@ -14,24 +14,14 @@ in
   options.templates.fpga = {
     enable = lib.mkEnableOption "FPGA development environment";
 
-    # OSS CAD Suite version configuration
-    version = lib.mkOption {
-      type = lib.types.str;
-      default = "2026-01-26";
-      description = "OSS CAD Suite release version (date format: YYYY-MM-DD)";
-    };
-
-    dateVersion = lib.mkOption {
-      type = lib.types.str;
-      default = "20260126";
-      description = "OSS CAD Suite date version for URL (format: YYYYMMDD)";
-    };
-
-    # Additional packages to include
-    extraPackages = lib.mkOption {
-      type = lib.types.listOf lib.types.package;
-      default = [ ];
-      description = "Additional packages to include in the FPGA development shell";
+    # OSS CAD Suite package file (required)
+    ossCadSuiteFile = lib.mkOption {
+      type = lib.types.path;
+      description = ''
+        Path to oss-cad-suite.nix file containing the package definition.
+        Edit this file to change the OSS CAD Suite version.
+      '';
+      example = lib.literalExpression "./oss-cad-suite.nix";
     };
 
     # GTKWave for waveform viewing
@@ -47,6 +37,13 @@ in
       default = true;
       description = "Include Verilator for Verilog simulation";
     };
+
+    # Additional packages to include
+    extraPackages = lib.mkOption {
+      type = lib.types.listOf lib.types.package;
+      default = [ ];
+      description = "Additional packages to include in the FPGA development shell";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -57,11 +54,9 @@ in
         ...
       }:
       let
-        # Build oss-cad-suite package with configured version
-        oss-cad-suite = pkgs.callPackage ../templates/oss-cad-suite.nix {
+        # Build oss-cad-suite from the provided file
+        oss-cad-suite = pkgs.callPackage cfg.ossCadSuiteFile {
           inherit system;
-          version = cfg.version;
-          dateVersion = cfg.dateVersion;
         };
 
         # Collect all FPGA-related packages
@@ -82,7 +77,7 @@ in
           name = "fpga-dev";
           motd = ''
             {202}FPGA Development Environment{reset}
-            {bold}OSS CAD Suite ${cfg.version}{reset}
+            {bold}OSS CAD Suite ${oss-cad-suite.version}{reset}
 
             Tools available: yosys, nextpnr, icestorm, and more
             $(type -p menu &>/dev/null && menu)
@@ -102,7 +97,7 @@ in
               name = "fpga-info";
               help = "Show FPGA toolchain information";
               command = ''
-                echo "OSS CAD Suite: ${cfg.version}"
+                echo "OSS CAD Suite: ${oss-cad-suite.version}"
                 echo "Yosys: $(yosys --version 2>/dev/null || echo 'not found')"
                 echo "nextpnr: $(nextpnr-ice40 --version 2>/dev/null || echo 'not found')"
               '';

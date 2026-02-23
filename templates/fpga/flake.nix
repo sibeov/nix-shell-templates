@@ -2,36 +2,22 @@
 #
 # Usage: nix flake init -t github:sibeov/nix-shell-templates#fpga
 #
-# Provides a complete FPGA development environment with:
-# - OSS CAD Suite (Yosys, nextpnr, icestorm, etc.)
-# - GTKWave for waveform viewing
-# - Verilator for simulation
+# A standalone FPGA development environment using:
+# - oss-cad-suite.nix: OSS CAD Suite package definition (edit to change version)
+#
+# This template is self-contained: all configuration is in this directory.
+# Edit oss-cad-suite.nix to update the toolchain version.
 {
-  description = "FPGA development environment with oss-cad-suite";
+  description = "FPGA development environment with OSS CAD Suite";
 
   inputs = {
-    nix-shell-templates.url = "github:sibeov/nix-shell-templates";
-    nixpkgs.follows = "nix-shell-templates/nixpkgs";
-    flake-parts.follows = "nix-shell-templates/flake-parts";
-    devshell.follows = "nix-shell-templates/devshell";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
   outputs =
-    inputs@{
-      self,
-      nix-shell-templates,
-      nixpkgs,
-      flake-parts,
-      devshell,
-      ...
-    }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        devshell.flakeModule
-        nix-shell-templates.flakeModules.common
-        nix-shell-templates.flakeModules.fpga
-      ];
-
+    { nixpkgs, ... }:
+    let
+      # Supported systems
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -39,39 +25,71 @@
         "x86_64-darwin"
       ];
 
-      # Project configuration
-      templates.projectName = "fpga-project";
+      # Helper to generate per-system attributes
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+    in
+    {
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
 
-      # FPGA module configuration
-      templates.fpga = {
-        enable = true;
+          # Build oss-cad-suite from local file
+          oss-cad-suite = pkgs.callPackage ./oss-cad-suite.nix {
+            inherit system;
+          };
 
-        # OSS CAD Suite version
-        # Update these to use a newer release
-        version = "2026-01-26";
-        dateVersion = "20260126";
-
-        # Tool options
-        includeGtkwave = true;
-        includeVerilator = true;
-
-        # Add any extra packages you need
-        extraPackages = [ ];
-      };
-
-      perSystem =
+          # Optional additional tools
+          extraTools = [
+            pkgs.gtkwave # Waveform viewer
+            pkgs.verilator # Verilog simulator
+          ];
+        in
         {
-          config,
-          pkgs,
-          system,
-          ...
-        }:
-        {
-          # Default formatter (official Nix formatter per RFC 166)
-          formatter = pkgs.nixfmt;
+          default = pkgs.mkShell {
+            name = "fpga-dev";
 
-          # Make the FPGA shell the default
-          devShells.default = config.devShells.fpga;
-        };
+            packages = [ oss-cad-suite ] ++ extraTools;
+
+            env = {
+              OSS_CAD_SUITE_ROOT = "${oss-cad-suite}";
+            };
+
+            shellHook = ''
+              echo ""
+              echo "FPGA Development Environment"
+              echo "============================="
+              echo "OSS CAD Suite: ${oss-cad-suite.version}"
+              echo ""
+              echo "Tools available:"
+              echo "  yosys       - Synthesis"
+              echo "  nextpnr-*   - Place and route"
+              echo "  icepack     - iCE40 bitstream"
+              echo "  ecppack     - ECP5 bitstream"
+              echo "  gtkwave     - Waveform viewer"
+              echo "  verilator   - Verilog simulator"
+              echo ""
+              echo "To update the toolchain, edit oss-cad-suite.nix"
+              echo ""
+            '';
+          };
+        }
+      );
+
+      # Export the oss-cad-suite package
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        {
+          oss-cad-suite = pkgs.callPackage ./oss-cad-suite.nix {
+            inherit system;
+          };
+          default = pkgs.callPackage ./oss-cad-suite.nix {
+            inherit system;
+          };
+        }
+      );
     };
 }

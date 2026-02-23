@@ -93,10 +93,8 @@ in
         fpgaContainer =
           if config.templates.fpga.enable && hasNix2Container then
             let
-              oss-cad-suite = pkgs.callPackage ../templates/oss-cad-suite.nix {
+              oss-cad-suite = pkgs.callPackage config.templates.fpga.ossCadSuiteFile {
                 inherit system;
-                version = config.templates.fpga.version;
-                dateVersion = config.templates.fpga.dateVersion;
               };
             in
             buildContainer {
