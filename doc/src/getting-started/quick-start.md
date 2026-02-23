@@ -80,7 +80,7 @@ $ menu
 [rust-dev]
 
   rust-info    - Show Rust toolchain information
-  new-project  - Create a new Rust project with edition 2021
+  new-project  - Create a new Rust project with edition 2024
   check-all    - Run cargo check, clippy, and fmt
   watch        - Watch for changes and run cargo check
 ```

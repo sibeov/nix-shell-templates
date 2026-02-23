@@ -55,7 +55,7 @@
         # version = "1.75.0";
 
         # Rust edition for new projects
-        edition = "2021";
+        edition = "2024";
 
         # Components to install
         components = [

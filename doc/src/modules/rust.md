@@ -52,7 +52,7 @@ Specific Rust version. If null, uses latest from channel.
 | Property | Value |
 |----------|-------|
 | Type | `string` |
-| Default | `"2021"` |
+| Default | `"2024"` |
 
 Rust edition for new projects.
 

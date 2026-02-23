@@ -86,7 +86,7 @@
       #   enable = true;
       #   channel = "stable";               # stable, beta, or nightly
       #   # version = "1.75.0";             # Specific version (optional)
-      #   edition = "2021";                 # Rust edition
+      #   edition = "2024";                 # Rust edition
       #   components = [                    # Toolchain components
       #     "rustfmt"
       #     "clippy"

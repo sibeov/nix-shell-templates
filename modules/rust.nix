@@ -36,7 +36,7 @@ in
     # Rust edition for new projects
     edition = lib.mkOption {
       type = lib.types.str;
-      default = "2021";
+      default = "2024";
       description = "Rust edition for new projects";
     };
 
