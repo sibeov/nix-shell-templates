@@ -2,6 +2,21 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.2.0](https://github.com/sibeov/nix-shell-templates/compare/08ceb12c5663a3fc3004c3646d30461630164140..0.2.0) - 2026-02-23
+#### Features
+- (**.gitignore**) add examples dir to gitignore - ([43acb27](https://github.com/sibeov/nix-shell-templates/commit/43acb2714b125a553c770a54e76e61307a24fd4c)) - Sindre
+- (**rust**) change default edition from 2021 to 2024 - ([38d11a4](https://github.com/sibeov/nix-shell-templates/commit/38d11a4c6a7d83ec2dcb7ddcbf2cd58b58cedc34)) - Sindre
+#### Documentation
+- (**mdbook**) add project documentation - ([415957a](https://github.com/sibeov/nix-shell-templates/commit/415957af790802be4b8b8d067413584f90aadd7f)) - Sindre
+#### Build system
+- (**flake.nix**) switch formatter from alejandra to nixfmt - ([08ceb12](https://github.com/sibeov/nix-shell-templates/commit/08ceb12c5663a3fc3004c3646d30461630164140)) - Sindre
+#### Refactoring
+- (**python**) use .python-version and pyproject.toml for configuration - ([3e4f06a](https://github.com/sibeov/nix-shell-templates/commit/3e4f06a148d40d135c49504b56f1cde1c8e83506)) - Sindre
+- (**rust**) use rust-toolchain.toml for toolchain configuration - ([6a23bcd](https://github.com/sibeov/nix-shell-templates/commit/6a23bcda613ed1d8ef6af88be84576edac52a397)) - Sindre
+- (**rust.nix**) minor changes to "rust-info" echos - ([f3633c1](https://github.com/sibeov/nix-shell-templates/commit/f3633c1ad11b6cbca79d0de97a6a44c8c6244426)) - Sindre
+
+- - -
+
 ## [0.1.0](https://github.com/sibeov/nix-shell-templates/compare/09828f858b4564a6b4bad6a168d0cf0a34e178c0..0.1.0) - 2026-02-23
 #### Features
 - (**flake-parts**) restructure with modular devshell templates - ([3d834c4](https://github.com/sibeov/nix-shell-templates/commit/3d834c45a0a1e28c83b193a5e8afb9326c50bdf5)) - Sindre
