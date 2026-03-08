@@ -90,39 +90,3 @@ repository = "nix-shell-templates"
 authors = [
     { signature = "sibeov <dev@sibeov.no>", username = "sibeov" },
 ]
-
-# # --- Git hooks ---
-# # Installs a commit-msg hook that rejects non-conventional commits
-# [git_hooks.commit-msg]
-# script = """#!/bin/sh
-# cog verify --file $1
-# """
-
-# --- Bump hooks ---
-# Commands run before the version commit is created
-pre_bump_hooks = [
-  "echo 'Bumping to {{version}}'",
-  "echo -n '{{version}}' > VERSION",
-]
-
-# Commands run after the version commit and tag are created
-post_bump_hooks = [
-  "git push",
-  "git push origin {{version_tag}}",
-]
-
-# Commands run prior to a pre package
-pre_package_bump_hooks = []
-
-# Commands run after a pre package
-post_package_bump_hooks = []
-
-# --- Hotfix bump profile (optional, invoke with: cog bump --hook-profile hotfix --auto) ---
-[bump_profiles.hotfix]
-pre_bump_hooks  = [
-  "echo 'Hotfix bump: {{version}}'"
-]
-post_bump_hooks = [
-  "git push",
-  "git push origin {{version_tag}}",
-]
