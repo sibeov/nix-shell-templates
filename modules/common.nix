@@ -6,12 +6,8 @@
 # - Base packages that are useful across all environments
 {
   lib,
-  config,
   ...
 }:
-let
-  cfg = config.templates;
-in
 {
   options.templates = {
     # Project metadata (optional, used in MOTD and container labels)
