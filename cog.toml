@@ -1,35 +1,128 @@
-from_latest_tag = true
-ignore_merge_commits = true
-ignore_fixup_commits = true
+# Author : sibeov
+# E-mail : dev@sibeov.no
+#
+# Created with help from Cocogitto documentation and various LLMs.
+#
+# cog.toml — Cocogitto configuration for general development projects
+
+# --- Core behavior ---
+from_latest_tag = true   # Only validate/bump commits since the last SemVer tag
+ignore_merge_commits = true  # Merge commits are noise; skip them in checks and changelogs
+ignore_fixup_commits = true  # Silently skip fixup!/squash! commits
+tag_prefix = "v"    # Tags will be v1.2.3 — conventional for most ecosystems
+skip_ci = "[skip ci]"
+skip_untracked = false  # Enforce a clean working tree before bumping
 disable_changelog = false
 disable_bump_commit = false
 generate_mono_repository_global_tag = false
 generate_mono_repository_package_tags = false
-branch_whitelist = ["main", "release/**"]
-skip_ci = "[skip ci]"
-skip_untracked = false
 
-pre_bump_hooks = [
-    "echo -n '{{version}}' > VERSION",
+
+# Restrict bumping to main branches only (glob patterns)
+branch_whitelist = ["main", "release/*"]
+
+# --- Commit type definitions ---
+# Extends the default feat/fix with explicit changelog titles and bump behavior
+
+[commit_types.feat]
+changelog_title = "Features"
+bump_minor      = true
+
+[commit_types.fix]
+changelog_title = "Bug Fixes"
+bump_patch      = true
+
+[commit_types.perf]
+changelog_title = "Performance Improvements"
+bump_patch      = true
+
+[commit_types.revert]
+changelog_title = "Reverts"
+bump_patch      = true
+
+[commit_types.refactor]
+changelog_title     = "Code Refactoring"
+omit_from_changelog = false
+bump_patch          = false
+
+[commit_types.docs]
+changelog_title     = "Documentation"
+omit_from_changelog = false
+
+[commit_types.style]
+changelog_title     = "Styles"
+omit_from_changelog = true
+
+[commit_types.test]
+changelog_title     = "Tests"
+omit_from_changelog = true
+
+[commit_types.build]
+changelog_title     = "Build System"
+omit_from_changelog = false
+
+[commit_types.ci]
+changelog_title     = "CI/CD"
+omit_from_changelog = true
+
+[commit_types.chore]
+changelog_title     = "Miscellaneous"
+omit_from_changelog = true
+
+[commit_types.update]
+changelog_title     = "Update"
+omit_from_changelog = false
+
+# --- Changelog ---
+[changelog]
+path       = "CHANGELOG.md"
+template   = "remote"
+remote     = "github.com"
+owner      = "sibeov"
+repository = "nix-shell-templates"
+
+# Uncomment and fill if your remote is GitHub/GitLab to get linked commits:
+# remote     = "github.com"
+# repository = "your-repo"
+# owner      = "your-org-or-user"
+
+# Map git signatures to usernames (optional but useful for team projects)
+authors = [
+    { signature = "sibeov <dev@sibeov.no>", username = "sibeov" },
 ]
-post_bump_hooks = []
+
+# # --- Git hooks ---
+# # Installs a commit-msg hook that rejects non-conventional commits
+# [git_hooks.commit-msg]
+# script = """#!/bin/sh
+# cog verify --file $1
+# """
+
+# --- Bump hooks ---
+# Commands run before the version commit is created
+pre_bump_hooks = [
+  "echo 'Bumping to {{version}}'",
+  "echo -n '{{version}}' > VERSION",
+]
+
+# Commands run after the version commit and tag are created
+post_bump_hooks = [
+  "git push",
+  "git push origin {{version_tag}}",
+]
+
+# Commands run prior to a pre package
 pre_package_bump_hooks = []
+
+# Commands run after a pre package
 post_package_bump_hooks = []
 
-[git_hooks]
-
-[commit_types]
-
-[changelog]
-path = "CHANGELOG.md"
-template = "remote"
-remote = "github.com"
-owner = "sibeov"
-repository = "nix-shell-templates"
-authors = [
-    { signature = "sibeov", username = "sibeov" },
+# --- Hotfix bump profile (optional, invoke with: cog bump --hook-profile hotfix --auto) ---
+[bump_profiles.hotfix]
+pre_bump_hooks  = [
+  "echo 'Hotfix bump: {{version}}'"
 ]
-
-[bump_profiles]
-
-[packages]
+post_bump_hooks = [
+  "git push",
+  "git push origin {{version_tag}}",
+]
